@@ -1,0 +1,751 @@
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type Asset {
+    auction: Auction!
+    auctionId: Uuid!
+    category: Category!
+    categoryTokenId: Uuid!
+    id: Uuid!
+    image: String!
+    metadata: Json!
+    position: Int!
+    tokenAmount: Int!
+    tokenContractAddress: Hex!
+    tokenId: Int!
+}
+
+type Auction {
+    amount: Hex!
+    amountOrMinimal: Hex!
+    antisnippingDuration: Int
+    antisnippingTrigger: Int
+    assets(filter: assetFilter, limit: Limit = 10, orderBy: assetOrderBy, orderDir: orderDir): [Asset]!
+    auctioneerAuctions(filter: auctioneerAuctionFilter, limit: Limit = 10, orderBy: auctioneerAuctionOrderBy, orderDir: orderDir): [AuctioneerAuction]!
+    auctioneers(limit: Limit = 10, orderDir: orderDir): [Auctioneer]!
+    bidIncremental: Hex!
+    bids(
+        filter: bidFilter,
+        limit: Limit = 10,
+        #Value hash
+        offset: Hex,
+        orderBy: bidOrderBy,
+        orderDir: orderDir
+    ): [Bid]!
+    blockNumber: Int!
+    blockedAt: DateTime
+    countBids: Int!
+    countLikes: Int!
+    createTransactionHash: String!
+    createdAt: DateTime!
+    currency: Currency!
+    currencyId: Uuid!
+    description: String!
+    endDate: DateTime!
+    finishedAt: DateTime
+    id: Uuid!
+    isBlocked: Boolean!
+    isFeatured: Boolean!
+    isLegacy: Boolean!
+    #True if the current user liked this auction
+    liked: Boolean!
+    metadata: Json
+    minimalBid: Hex!
+    rewards: Json!
+    sellerAddress: Hex!
+    sponsor: Hex
+    startAmount: Hex!
+    startDate: DateTime!
+    status: String!
+    title: String!
+    trustLevel: String!
+    updatedAt: DateTime!
+    winnerAddress: Hex
+}
+
+type AuctionLike {
+    auction: Auction!
+    auctionId: Uuid!
+    count: Int!
+    id: Uuid!
+    isLike: Boolean!
+    user: User!
+    userAddress: Hex!
+}
+
+type Auctioneer {
+    auctioneerAuctions(filter: auctioneerAuctionFilter, limit: Limit = 10, orderBy: auctioneerAuctionOrderBy, orderDir: orderDir): [AuctioneerAuction]!
+    avatar: String
+    countAuctions: Int!
+    countBids: Int!
+    countFollowers: Int!
+    createdAt: DateTime!
+    deletedAt: DateTime
+    description: String!
+    #True if the current user followed this auctioneer
+    followed: Boolean!
+    languages: Json!
+    profileName: String!
+    socialLinks: Json!
+    updatedAt: DateTime!
+    userAddress: Hex!
+}
+
+type AuctioneerAuction {
+    auction: Auction!
+    auctionId: Uuid!
+    auctioneer: Auctioneer!
+    avatar: String
+    countFollowers: Int!
+    createdAt: DateTime!
+    description: String!
+    estimate: Hex
+    id: Uuid!
+    isLive: Boolean!
+    languages: Json!
+    live: Json
+    preview: Json
+    profileName: String!
+    updatedAt: DateTime!
+    userAddress: Hex!
+}
+
+type AuctioneerFollow {
+    auctioneer: Auctioneer!
+    auctioneerAddress: Hex!
+    count: Int!
+    id: Uuid!
+    isFollow: Boolean!
+    user: User!
+    userAddress: Hex!
+}
+
+#user currency balance
+type Balance {
+    available: Hex!
+    currency: Currency!
+    lock: Hex!
+    total: Hex!
+}
+
+type Bid {
+    amount: Hex!
+    auction: Auction!
+    auctionId: Uuid!
+    auctioneer: Auctioneer
+    auctioneerAddress: Hex
+    bidAt: DateTime!
+    bidIndex: Int!
+    bidderAddress: Hex!
+    blockNumber: Int!
+    hasAuctioneer: Boolean!
+    hasSponsorAddress: Boolean!
+    hash: Hex!
+    sponsorAddress: Hex
+}
+
+type Category {
+    abi: Json!
+    contractAddress: Hex!
+    createdAt: DateTime!
+    description: String
+    event: String
+    function: String
+    id: Uuid!
+    image: String
+    imagePatternUrl: String
+    isErc1155: Boolean!
+    isErc20: Boolean!
+    isErc721: Boolean!
+    isEth: Boolean!
+    metadata: Json!
+    reference: String!
+    title: String!
+    tokenImageUrl: String
+    updatedAt: DateTime!
+    url: String
+    video: String
+}
+
+type Currency {
+    abi: Json!
+    contractAddress: Hex!
+    createdAt: DateTime!
+    currencySymbol: String
+    decimalNumber: Int
+    defaultValue: Hex!
+    event: String
+    function: String
+    id: Uuid!
+    isErc1155: Boolean!
+    isErc20: Boolean!
+    isErc721: Boolean!
+    isEth: Boolean!
+    metadata: Json!
+    rates: Json!
+    reference: String!
+    symbol: String
+    title: String!
+    updatedAt: DateTime!
+}
+
+type Mutation {
+    #This mutation requires authentication.
+    auctionLiked(auctionId: Uuid!): Boolean
+    #This mutation requires authentication.
+    auctionMetadata(auctionId: Uuid!, description: String!, title: String!): Boolean
+    #This mutation requires authentication.
+    auctioneerAuction(auctionId: Uuid!, description: String!, estimate: Hex, isLive: Boolean!, languages: [language], live: videoInput, preview: videoInput): Boolean
+    #This mutation requires authentication.
+    auctioneerAuctionDelete(auctionId: Uuid!): Boolean
+    #This mutation requires authentication.
+    auctioneerFollowed(auctioneer: Hex!): Boolean
+    #This mutation requires authentication.
+    becameAuctioneer(avatar: Url, description: String!, languages: [language]!, profileName: String!, socialLinks: socialLinksInput!): JWT!
+    #This mutation requires authentication.
+    informationAdded(email: Email!, name: String!): JWT!
+    # if source is trezor sign specify type: trezor
+    login(message: String!, sign: String!, type: String): JWT!
+}
+
+type Query {
+    acnetBalances(currencyId: Uuid, userAddress: Hex!): [Balance]!
+    auctioneerAuctions(filter: auctioneerAuctionFullFilter, limit: Limit = 10, orderBy: auctioneerAuctionOrderBy, orderDir: orderDir): [AuctioneerAuction]!
+    auctioneers(filter: auctioneerFullFilter, limit: Limit = 10, orderBy: auctioneerOrderBy, orderDir: orderDir): [Auctioneer]!
+    auctions(
+        filter: auctionFullFilter,
+        limit: Limit = 10,
+        #Value id
+        offset: Uuid,
+        orderBy: auctionOrderBy,
+        orderDir: orderDir
+    ): [Auction]!
+    bids(
+        filter: bidFullFilter,
+        limit: Limit = 10,
+        #Value hash
+        offset: Hex,
+        orderBy: bidOrderBy,
+        orderDir: orderDir
+    ): [Bid]!
+    categories(filter: categoryFullFilter, limit: Limit = 10, orderBy: categoryOrderBy, orderDir: orderDir): [Category]!
+    currencies(filter: currencyFullFilter, limit: Limit = 10, orderBy: currencyOrderBy, orderDir: orderDir): [Currency]!
+    mainnetBalances(currencyId: Uuid, userAddress: Hex!): [Balance]!
+    #List of recommended auctions.
+    recommendedAuctions: [Auction]!
+    tokens(filter: tokenFullFilter, limit: Limit = 10, orderBy: tokenOrderBy, orderDir: orderDir): [Token]!
+    #List of 5 auctioneers.
+    topAuctioneers: [Auctioneer]!
+    #List of 15 top auctions.
+    topAuctions: [Auction]!
+    #Current user
+    user: User
+    vouchers(filter: voucherFullFilter, limit: Limit = 10, orderBy: voucherOrderBy, orderDir: orderDir): [Voucher]!
+}
+
+#user asset
+type SimpleAsset {
+    available: Hex!
+    category: Category!
+    id: Int!
+    image: String!
+    lock: Hex!
+}
+
+type Token {
+    abi: Json!
+    config: Json!
+    contractAddress: Hex!
+    createdAt: DateTime!
+    currencySymbol: String
+    decimalNumber: Int
+    defaultValue: Hex!
+    description: String
+    event: String
+    function: String
+    id: Uuid!
+    image: String
+    imagePatternUrl: String
+    isCategory: Boolean!
+    isCurrency: Boolean!
+    isErc1155: Boolean!
+    isErc20: Boolean!
+    isErc721: Boolean!
+    isEth: Boolean!
+    metadata: Json!
+    reference: String!
+    symbol: String
+    title: String!
+    tokenId: Int!
+    tokenImageUrl: String
+    updatedAt: DateTime!
+    url: String
+    video: String
+}
+
+type User {
+    acnetAssets(categoryTokenId: Uuid): [SimpleAsset]!
+    acnetBalances(currencyId: Uuid): [Balance]!
+    address: Hex!
+    auctionLikes(filter: auctionLikeFilter, limit: Limit = 10, orderBy: auctionLikeOrderBy, orderDir: orderDir): [AuctionLike]!
+    auctioneer: Auctioneer
+    auctioneerFollows(filter: auctioneerFollowFilter, limit: Limit = 10, orderBy: auctioneerFollowOrderBy, orderDir: orderDir): [AuctioneerFollow]!
+    bids(
+        filter: bidFilter,
+        limit: Limit = 10,
+        #Value hash
+        offset: Hex,
+        orderBy: bidOrderBy,
+        orderDir: orderDir
+    ): [Bid]!
+    createdAt: DateTime!
+    email: String!
+    mainnetAssets(categoryTokenId: Uuid): [SimpleAsset]!
+    mainnetBalances(currencyId: Uuid): [Balance]!
+    name: String!
+    pendingAssets(categoryTokenId: Uuid): [SimpleAsset]!
+    vouchers(filter: voucherFilter, limit: Limit = 10, orderBy: voucherOrderBy, orderDir: orderDir): [Voucher]!
+    walletHistory(currencyId: Uuid): Json!
+}
+
+type Voucher {
+    amount: Hex!
+    categoryTokenId: Uuid!
+    requestAt: DateTime!
+    requestHash: Hex!
+    submittedAt: DateTime
+    submittedHash: Hex
+    tokenAddress: Hex!
+    tokenId: Int!
+    userAddress: Hex!
+    voucher: Hex
+}
+
+enum assetOrderBy {
+    position
+    tokenAmount
+    tokenContractAddress
+    tokenId
+}
+
+enum auctionLikeOrderBy {
+    count
+    userAddress
+}
+
+enum auctionOrderBy {
+    amount
+    amountOrMinimal
+    antiSnippingDuration
+    antiSnippingTrigger
+    bidIncremental
+    blockNumber
+    blockedAt
+    countBids
+    createdAt
+    endDate
+    featured
+    finishedAt
+    legacy
+    minimalBid
+    rewards
+    sellerAddress
+    sponsor
+    startAmount
+    startDate
+    updatedAt
+    winnerAddress
+}
+
+enum auctionStatus {
+    finished
+    pending
+    running
+}
+
+enum auctioneerAuctionOrderBy {
+    countFollowers
+    createdAt
+    estimate
+    isLive
+    topAuctioneers
+    updatedAt
+}
+
+enum auctioneerFollowOrderBy {
+    auctioneerAddress
+    count
+    userAddress
+}
+
+enum auctioneerOrderBy {
+    countFollowers
+    createdAt
+    deletedAt
+    updatedAt
+    userAddress
+}
+
+enum bidOrderBy {
+    amount
+    auctioneerAddress
+    bidAt
+    bidIndex
+    bidderAddress
+    blockNumber
+    hash
+    sponsorAddress
+}
+
+enum categoryOrderBy {
+    contractAddress
+    createdAt
+    updatedAt
+}
+
+enum currencyOrderBy {
+    contractAddress
+    createdAt
+    updatedAt
+}
+
+enum language {
+    ar
+    en
+    es
+    fr
+    it
+    pt
+    zh
+}
+
+enum orderDir {
+    asc
+    desc
+}
+
+enum tokenOrderBy {
+    contractAddress
+    createdAt
+    isCategory
+    isCurrency
+    tokenId
+    updatedAt
+}
+
+enum videoProvider {
+    twitch
+    youtube
+}
+
+enum voucherOrderBy {
+    amount
+    requestAt
+    requestHash
+    submittedAt
+    submittedHash
+    tokenAddress
+    tokenId
+    userAddress
+    voucher
+}
+
+input assetFilter {
+    categoryTokenId: uuidInputCondition
+    id: uuidInputCondition
+    image: stringInputCondition
+    position: intInputCondition
+    tokenAmount: intInputCondition
+    tokenContractAddress: hexInputCondition
+    tokenId: intInputCondition
+}
+
+input auctionFullFilter {
+    amount: hexInputCondition
+    amountOrMinimal: hexInputCondition
+    antiSnippingDuration: intInputCondition
+    antiSnippingTrigger: intInputCondition
+    auctioneerAddress: hexInputCondition
+    bidIncremental: hexInputCondition
+    bidderAddress: hexInputCondition
+    blockNumber: intInputCondition
+    blockedAt: dateTimeInputCondition
+    categoryId: uuidInputCondition
+    createTransactionHash: stringInputCondition
+    createdAt: dateTimeInputCondition
+    currencyId: uuidInputCondition
+    endDate: dateTimeInputCondition
+    finishedAt: dateTimeInputCondition
+    hasAuctioneer: Boolean
+    hasBids: Boolean
+    hasLive: Boolean
+    id: uuidInputCondition
+    isFeatured: Boolean
+    isLegacy: Boolean
+    language: languageInputCondition
+    #true for only auctions liked by current user, false for auctions not liked by current user
+    liked: Boolean
+    minimalBid: hexInputCondition
+    sellerAddress: hexInputCondition
+    sponsor: hexInputCondition
+    startAmount: hexInputCondition
+    startDate: dateTimeInputCondition
+    status: auctionStatusInputCondition
+    trustLevel: stringInputCondition
+    updatedAt: dateTimeInputCondition
+    winnerAddress: hexInputCondition
+}
+
+input auctionLikeFilter {
+    auctionId: uuidInputCondition
+    count: intInputCondition
+    id: uuidInputCondition
+}
+
+input auctionStatusInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: auctionStatus
+    #Matches any of the values specified in an array.
+    in: [auctionStatus!]
+    #Matches all values that are not equal to a specified value.
+    ne: auctionStatus
+    #Matches none of the values specified in an array.
+    nin: [auctionStatus!]
+}
+
+input auctioneerAuctionFilter {
+    auctionId: uuidInputCondition
+    createdAt: dateTimeInputCondition
+    description: stringInputCondition
+    estimate: hexInputCondition
+    id: uuidInputCondition
+    isLive: Boolean
+    updatedAt: dateTimeInputCondition
+}
+
+input auctioneerAuctionFullFilter {
+    auctionId: uuidInputCondition
+    createdAt: dateTimeInputCondition
+    description: stringInputCondition
+    estimate: hexInputCondition
+    id: uuidInputCondition
+    isLive: Boolean
+    updatedAt: dateTimeInputCondition
+    userAddress: hexInputCondition
+}
+
+input auctioneerFollowFilter {
+    auctioneerAddress: hexInputCondition
+    count: intInputCondition
+    id: uuidInputCondition
+}
+
+input auctioneerFullFilter {
+    avatar: stringInputCondition
+    createdAt: dateTimeInputCondition
+    deletedAt: dateTimeInputCondition
+    description: stringInputCondition
+    #true for only auctioneers followed by current user, false for auctioneers not followed by current user
+    followed: Boolean
+    profileName: stringInputCondition
+    updatedAt: dateTimeInputCondition
+    userAddress: hexInputCondition
+}
+
+input bidFilter {
+    amount: hexInputCondition
+    auctioneerAddress: hexInputCondition
+    bidAt: dateTimeInputCondition
+    bidIndex: intInputCondition
+    bidderAddress: hexInputCondition
+    blockNumber: intInputCondition
+    hash: hexInputCondition
+    sponsorAddress: hexInputCondition
+}
+
+input bidFullFilter {
+    amount: hexInputCondition
+    auctionId: uuidInputCondition
+    auctioneerAddress: hexInputCondition
+    bidAt: dateTimeInputCondition
+    bidIndex: intInputCondition
+    bidderAddress: hexInputCondition
+    blockNumber: intInputCondition
+    hash: hexInputCondition
+    sponsorAddress: hexInputCondition
+}
+
+input categoryFullFilter {
+    contractAddress: hexInputCondition
+    createdAt: dateTimeInputCondition
+    id: uuidInputCondition
+    reference: stringInputCondition
+    title: stringInputCondition
+    updatedAt: dateTimeInputCondition
+}
+
+input currencyFullFilter {
+    contractAddress: hexInputCondition
+    createdAt: dateTimeInputCondition
+    id: uuidInputCondition
+    reference: stringInputCondition
+    title: stringInputCondition
+    updatedAt: dateTimeInputCondition
+}
+
+input dateTimeInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: DateTime
+    #Matches value that are greater than a specified value.
+    gt: DateTime
+    #Matches value that are greater than or equal to a specified value.
+    gte: DateTime
+    #Matches any of the values specified in an array.
+    in: [DateTime!]
+    #Matches value that are less than a specified value.
+    lt: DateTime
+    #Matches value that are less than or equal to a specified value.
+    lte: DateTime
+    #Matches all values that are not equal to a specified value.
+    ne: DateTime
+    #Matches none of the values specified in an array.
+    nin: [DateTime!]
+}
+
+input hexInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: Hex
+    #Matches any of the values specified in an array.
+    in: [Hex!]
+    #Matches all values that are not equal to a specified value.
+    ne: Hex
+    #Matches none of the values specified in an array.
+    nin: [Hex!]
+}
+
+input intInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: Int
+    #Matches value that are greater than a specified value.
+    gt: Int
+    #Matches value that are greater than or equal to a specified value.
+    gte: Int
+    #Matches any of the values specified in an array.
+    in: [Int!]
+    #Matches value that are less than a specified value.
+    lt: Int
+    #Matches value that are less than or equal to a specified value.
+    lte: Int
+    #Matches all values that are not equal to a specified value.
+    ne: Int
+    #Matches none of the values specified in an array.
+    nin: [Int!]
+}
+
+input languageInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: language
+    #Matches any of the values specified in an array.
+    in: [language!]
+    #Matches all values that are not equal to a specified value.
+    ne: language
+    #Matches none of the values specified in an array.
+    nin: [language!]
+}
+
+input socialLinksInput {
+    facebook: Url
+    twitch: Url
+    twitter: Url
+    youtube: Url
+}
+
+input stringInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: String
+    #Matches any of the values specified in an array.
+    in: [String!]
+    #Matches all values that are not equal to a specified value.
+    ne: String
+    #Matches none of the values specified in an array.
+    nin: [String!]
+}
+
+input tokenFullFilter {
+    contractAddress: hexInputCondition
+    createdAt: dateTimeInputCondition
+    id: uuidInputCondition
+    isCategory: Boolean
+    isCurrency: Boolean
+    reference: stringInputCondition
+    title: stringInputCondition
+    tokenId: intInputCondition
+    updatedAt: dateTimeInputCondition
+}
+
+input uuidInputCondition {
+    #Matches value that are equal to a specified value.
+    eq: Uuid
+    #Matches any of the values specified in an array.
+    in: [Uuid!]
+    #Matches all values that are not equal to a specified value.
+    ne: Uuid
+    #Matches none of the values specified in an array.
+    nin: [Uuid!]
+}
+
+input videoInput {
+    id: String!
+    provider: videoProvider!
+    thumbnail: Url
+}
+
+input voucherFilter {
+    amount: hexInputCondition
+    categoryTokenId: uuidInputCondition
+    requestAt: dateTimeInputCondition
+    requestHash: hexInputCondition
+    submittedAt: dateTimeInputCondition
+    submittedHash: hexInputCondition
+    tokenAddress: hexInputCondition
+    tokenId: intInputCondition
+    voucher: hexInputCondition
+}
+
+input voucherFullFilter {
+    amount: hexInputCondition
+    categoryTokenId: uuidInputCondition
+    requestAt: dateTimeInputCondition
+    requestHash: hexInputCondition
+    submittedAt: dateTimeInputCondition
+    submittedHash: hexInputCondition
+    tokenAddress: hexInputCondition
+    tokenId: intInputCondition
+    userAddress: hexInputCondition
+    voucher: hexInputCondition
+}
+
+
+#The `Hex` scalar type represents hexadecimal string, example : 0x000000000000000000000000
+scalar Hex
+
+#The `Json` scalar type represents json data, represented as UTF-8 character sequences.
+scalar Json
+
+#The `DateTime` scalar type represents date time, example : 2019-07-11T15:24:53+02:00
+scalar DateTime
+
+#Min 1, max 25
+scalar Limit
+
+#The `Uuid` scalar type represents uniq id string, example : 603abf9b-5251-3819-bc4b-c25cf4044a7b
+scalar Uuid
+
+scalar Email
+
+#The string representation of the object is a JWT
+scalar JWT
+
+scalar Url
